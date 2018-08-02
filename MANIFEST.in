@@ -1,0 +1,4 @@
+exclude .gitignore
+include README.md
+include setup.cfg
+prune .git
