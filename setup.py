@@ -8,14 +8,14 @@ with open("requirements.txt", "r") as fh:
 
 setup(
     name="pycopyql",
-    version="0.1.0",
+    version="0.2.0",
     author="Matthew Turland",
     author_email="me@matthewturland.com",
     description="Exports a subset of data from a relational database",
     keywords="database relational data export tool utility",
     url="https://github.com/elazar/pycopyql",
     license="MIT",
-    classifiers=(
+    classifiers=[
         "Development Status :: 3 - Alpha",
         "Environment :: Console",
         "Intended Audience :: Developers",
@@ -24,7 +24,7 @@ setup(
         "Operating System :: OS Independent",
         "Topic :: Database",
         "Topic :: Utilities",
-    ),
+    ],
     entry_points={
         'console_scripts': [
             'pycopyql=pycopyql.cli:main',

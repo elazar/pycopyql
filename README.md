@@ -68,10 +68,10 @@ Let's take a look at an example of a resolver that's bundled with `pycopyql`.
 Python 3.7.0 (default, Jun 29 2018, 20:14:27)
 [Clang 9.0.0 (clang-900.0.39.2)] on darwin
 Type "help", "copyright", "credits" or "license" for more information.
->>> from pycopyql.query import dependents_inflector
+>>> from pycopyql.resolver.inflector import dependents_inflector
 >>> help(dependents_inflector)
 
-Help on function dependents_inflector in module pycopyql.query:
+Help on function dependents_inflector in module pycopyql.resolver.inflector:
 
 dependents_inflector(meta, table, column)
     Uses inflection of column names to return foreign keys from tables that reference the specified column if it is a primary key.
@@ -106,7 +106,7 @@ Given a table name of `'libraries'` and a column name of `'id'`, `dependents_inf
 ]
 ```
 
-`pycopyql` also comes with another bundled resolver called `dependencies_inflector`, which works in the opposite direction of `dependents_inflector`. That is, where `dependents_inflector` returns foreign keys that reference a primary key, `dependencies_inflector` returns the primary key corresponding to a foreign key.
+`pycopyql.resolver.inflector` also includes another resolver called `dependencies_inflector`, which works in the opposite direction of `dependents_inflector`. That is, where `dependents_inflector` returns foreign keys that reference a primary key, `dependencies_inflector` returns the primary key corresponding to a foreign key.
 
 Using the above database as an example again, given a table name of `'books'` and a column name of `'library_id'`, `dependencies_inflector` would return this.
 
@@ -121,7 +121,7 @@ A custom resolver that handles both of these cases using the bundled resolvers s
 ```python
 # pycopyql.py
 
-from pycopyql.query import dependents_inflector, dependencies_inflector
+from pycopyql.resolver.inflector import dependents_inflector, dependencies_inflector
 
 def my_resolver(meta, table, column):
     dependents = dependents_inflector(meta, table, column)
@@ -139,7 +139,9 @@ config = {
 }
 ```
 
-Custom resolvers can operate in many ways. For example, one might use foreign keys to determine relationships. `pycopyql.query` also includes the functions `dependents_foreign_key` and `dependencies_foreign_key`, which are equivalents of `dependents_inflector` and `dependencies_inflector` respectively that use foreign keys instead of inflection to determine column relationships.
+In fact, `pycopyql.resolver.inflector` contains yet another resolver called `inflector` that functions exactly this way.
+
+Custom resolvers can operate in many ways. For example, one might use foreign keys to determine relationships. The `dependents_foreign_key` and `dependencies_foreign_key` resolvers contained in `pycopyql.resolver.foreign_key` are equivalent to the `dependents_inflector` and `dependencies_inflector` resolvers described earlier. `pycopyql.resolver.foreign_key` also includes the `foreign_key` resolver, which is likewise equivalent to the `inflector` resolver described earlier.
 
 For some cases where database column naming conventions are inconsistent, or where one table requires multiple references to another table (e.g. identifiers of the last users who created and updated a record), a resolver can use a static list of keys specific to that database. Here's an example using the database schema shown earlier.
 
@@ -160,6 +162,54 @@ def my_resolver(meta, table, column):
     if table in keys and column in keys[table]:
         return keys[table][column]
     return []
+```
+
+`pycopyql.resolver.static` contains a convenience function, `static_map`, that takes in a dictionary like the one assigned to `keys` in the example above and returns a resolver that will use that static map in the same way.
+
+```python
+from pycopyql.resolver.static import static_map
+
+keys = {
+    'table_1': {
+        'column_1': [
+            { 'table': 'other_table_1', 'column': 'other_column_1' },
+            { 'table': 'other_table_2', 'column': 'other_column_2' },
+            # ...
+        ]
+    },
+    'table_2': {
+        # ...
+    },
+    # ...
+}
+
+config = {
+    'connections': {
+        'my_connection': {
+            # ...
+
+            'resolver': static_map(keys),
+        },
+    },
+}
+```
+
+Custom resolvers can use several of the resolvers described here together simultaneously. For example, if you wish to use inflection, but have some cases for which you must provide a static mapping, you can do both using a custom resolver.
+
+```python
+from pycopyql.resolver.inflector import inflector
+from pycopyql.resolver.static import static_map
+
+static_keys = {
+    # ...
+}
+
+static_resolver = static_map(static_keys)
+
+def my_resolver(meta, table, column):
+    static = static_resolver(meta, table, column)
+    inflected = inflector(meta, table, column)
+    return static + inflected
 ```
 
 ## Output Formats
