@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.2.1
+
+* Fixed issue that prevented `pycopyql.resolver` and its contents from being included in the release.
+
 ## 0.2.0
 
 * **BREAK**: `dependencies_inflector` and `dependents_inflector` have been relocated from `pycopyql.query` into `pycopyql.resolver.inflector`.

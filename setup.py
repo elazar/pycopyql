@@ -8,7 +8,7 @@ with open("requirements.txt", "r") as fh:
 
 setup(
     name="pycopyql",
-    version="0.2.0",
+    version="0.2.1",
     author="Matthew Turland",
     author_email="me@matthewturland.com",
     description="Exports a subset of data from a relational database",
