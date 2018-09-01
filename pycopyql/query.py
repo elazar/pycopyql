@@ -1,4 +1,5 @@
 from functools import reduce
+from queue import Queue
 from re import split
 from sqlalchemy.sql import select
 
@@ -16,9 +17,16 @@ def query(connection, meta, resolver, query_params):
         dict: Dictionary keyed by table name of dictionaries corresponding to table rows
     """
 
-    queries = [_parse_query(param) for param in query_params]
-    execute_query = lambda data, query: _fetch(connection, meta, resolver, query, data)
-    return reduce(execute_query, queries, {})
+    queue = Queue()
+    for param in query_params:
+        queue.put(_parse_query(param))
+
+    data = {}
+    query_history = set()
+    while not queue.empty():
+        _fetch(connection, meta, resolver, queue, data, query_history)
+
+    return data
 
 def _parse_query(query):
     """
@@ -34,7 +42,7 @@ def _parse_query(query):
     table, column, value = split('\.|:', query)
     return { 'table': table, 'column': column, 'value': value }
 
-def _fetch(connection, meta, resolver, query, data):
+def _fetch(connection, meta, resolver, queue, data, query_history):
     """
     Fetches the results of a given query.
 
@@ -42,18 +50,20 @@ def _fetch(connection, meta, resolver, query, data):
         connection (sqlalchemy.engine.Connection): Connection to the database to query
         meta (sqlalchemy.schema.MetaData): Metadata for the database structure
         resolver (function): Callback for determining foreign keys corresponding to a given column
-        query (dict): Query parameters as returned by _parse_query()
+        queue (queue.Queue): Queue of queries remaining to execute
         data (dict): Data set to which the rows fetched by this function should be added
+        query_history (set): Set of hashes of previously run queries, used for duplicate detection
 
     Returns:
-        dict: Copy of the data parameter with any fetched rows added to it
+        None
     """
 
-    # If this query has already been executed, return data unmodified
-    if query['table'] in data:
-        find_row = lambda row: row[query['column']] == query['value']
-        if len(list(filter(find_row, data[query['table']].values()))) > 0:
-            return data
+    query = queue.get()
+
+    query_hash = hash(frozenset(query.items()))
+    if query_hash in query_history:
+        return
+    query_history.add(query_hash)
 
     table = meta.tables[query['table']]
     s = select([table]).where(table.c[query['column']] == query['value'])
@@ -68,7 +78,5 @@ def _fetch(connection, meta, resolver, query, data):
         for column, value in row.items():
             foreign_keys = resolver(meta, table.name, column)
             for foreign_key in foreign_keys:
-                foreign_query = { **foreign_key, 'value': str(value) }
-                data = _fetch(connection, meta, resolver, foreign_query, data)
-
-    return data
+                foreign_query = { **foreign_key, 'value': value }
+                queue.put(foreign_query)
