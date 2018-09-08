@@ -19,4 +19,4 @@ def main():
     meta = get_meta(engine)
     resolver = connection_config['resolver']
     data = query(connection, meta, resolver, args.query)
-    export(meta, data)
+    export(meta, data, args.output)

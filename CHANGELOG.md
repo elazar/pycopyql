@@ -1,12 +1,16 @@
 # CHANGELOG
 
+## 0.4.0
+
+* **BREAK**: Output is no longer sent to stdout. Instead, a path to a destination file is now specified after the connection name when invoking `pycopyql`.
+
 ## 0.3.0
 
-* `query` now uses a queue instead of recursion
-* `query` should now correctly handle duplicate query detection
-* `dependencies_inflector` and `dependents_inflector` now handle inflection failures by using the original uninflected value
-* `dependencies_inflector` and `dependents_inflector` now use database metadata to determine primary key column names
-* `dependencies_inflector` and `dependents_inflector` now take an optional fourth parameter, `inflector`, to support custom inflection
+* `query` now uses a queue instead of recursion.
+* `query` should now correctly handle duplicate query detection.
+* `dependencies_inflector` and `dependents_inflector` now handle inflection failures by using the original uninflected value.
+* `dependencies_inflector` and `dependents_inflector` now use database metadata to determine primary key column names.
+* `dependencies_inflector` and `dependents_inflector` now take an optional fourth parameter, `inflector`, to support custom inflection.
 
 ## 0.2.1
 

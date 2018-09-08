@@ -15,19 +15,20 @@ pip install pycopyql
 ## Usage
 
 ```sh
-pycopyql [-h] [-c CONFIG] [-f FORMAT] connection query [query ...]
+pycopyql [-h] [-c CONFIG] [-f FORMAT] connection output query [query ...]
 ```
 
 * `-h`: Shows usage information
 * `-c`: Path to a configuration file, defaults to `./pycopyql.py`
 * `-f`: Output format, `sql` and `json` are supported, defaults to `sql`
 * `connection`: Name of the connection to use, defined in the configuration file
+* `output`: Path to output file
 * `query`: One or more query strings (delimited by spaces) of the format `TABLE.COLUMN:VALUE` (e.g. `accounts.id:1`)
 
 Example:
 
 ```sh
-pycopyql -c ./path/to/pycopyql.py -f json my_connection accounts.id:1 users.id:2
+pycopyql -c ./path/to/pycopyql.py -f json my_connection path/to/output.sql accounts.id:1 users.id:2
 ```
 
 ## Configuration
@@ -230,12 +231,13 @@ Type "help", "copyright", "credits" or "license" for more information.
 
 Help on function export_sql in module pycopyql.export:
 
-export_sql(meta, data)
+export_sql(meta, data, output)
     Outputs data as SQL INSERT statements.
 
     Parameters:
         meta (sqlalchemy.schema.MetaData): Metadata for the database structure
-        data: Dictionary keyed by table name of dictionaries corresponding to table rows
+        data (dict): Dictionary keyed by table name of dictionaries corresponding to table rows
+        output (string): Path for output file
 
     Returns:
         None
@@ -244,7 +246,7 @@ export_sql(meta, data)
 If you wanted to override the bundled SQL exporter, here's what it might look like.
 
 ```python
-def my_sql_exporter(meta, data):
+def my_sql_exporter(meta, data, output):
     # ...
 
 config = {

@@ -24,13 +24,14 @@ def get_exporter(format, exporters):
 
     raise RuntimeError('Unsupported format: %s' % format)
 
-def export_sql(meta, data):
+def export_sql(meta, data, output):
     """
     Outputs data as SQL INSERT statements.
 
     Parameters:
         meta (sqlalchemy.schema.MetaData): Metadata for the database structure
-        data: Dictionary keyed by table name of dictionaries corresponding to table rows
+        data (dict): Dictionary keyed by table name of dictionaries corresponding to table rows
+        output (string): Path for output file
 
     Returns:
         None
@@ -39,31 +40,38 @@ def export_sql(meta, data):
     tables = [table for table in meta.sorted_tables if table.name in data]
     preparer = IdentifierPreparer(meta.bind.dialect)
     prepare_column = lambda column: preparer.format_column(column, name=column.name)
+    output_file = open(output, 'w')
+
     for table in tables:
-        columns = ", ".join([ prepare_column(column) for column in table.columns.values() ])
+        columns = ', '.join([ prepare_column(column) for column in table.columns.values() ])
         for row in data[table.name].values():
             values = list(map(_transform, list(row.values())))
-            insert = "INSERT INTO %s (%s) VALUES (%s);" % (
+            insert = "INSERT INTO %s (%s) VALUES (%s);\n" % (
                 preparer.format_table(table, name=table.name),
                 columns,
-                ", ".join(values)
+                ', '.join(values)
             )
-            print(insert)
+            output_file.write(insert)
 
-def export_json(meta, data):
+    output_file.close()
+
+def export_json(meta, data, output):
     """
     Outputs data as JSON.
 
     Parameters:
         meta (sqlalchemy.schema.MetaData): Metadata for the database structure
-        data: Dictionary keyed by table name of dictionaries corresponding to table rows
+        data (dict): Dictionary keyed by table name of dictionaries corresponding to table rows
+        output (string): Path for output file
 
     Returns:
         None
     """
 
     formatted = { k: list(v.values()) for k, v in data.items() }
-    print(json.dumps(formatted, cls=JSONEncoder))
+    output_file = open(output, 'w')
+    output_file.write(json.dumps(formatted, cls=JSONEncoder))
+    output_file.close()
 
 def _transform(obj):
     """

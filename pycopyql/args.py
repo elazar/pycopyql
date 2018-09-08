@@ -25,6 +25,10 @@ def get_args():
         help='Name of the database connection to use',
     )
     parser.add_argument(
+        'output',
+        help='Path to output file',
+    )
+    parser.add_argument(
         'query',
         nargs='+',
         help='Query of the form TABLE.COLUMN:VALUE',
